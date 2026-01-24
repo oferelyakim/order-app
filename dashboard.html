@@ -1275,12 +1275,6 @@
           <label>Name *</label>
           <input type="text" class="form-control" id="customerName" value="${escapeHtml(customer?.customerName || '')}">
         </div>
-        ${!isEdit ? `
-          <div class="form-group">
-            <label>Customer ID (optional, auto-generated if empty)</label>
-            <input type="text" class="form-control" id="customerId" placeholder="e.g., acme123">
-          </div>
-        ` : ''}
         <div class="form-group">
           <label>Contact Info</label>
           <input type="text" class="form-control" id="customerContact" value="${escapeHtml(customer?.contactInfo || '')}" placeholder="Email or phone">
@@ -1317,8 +1311,6 @@
         customerData.customerId = customerId;
         res = await api('updateCustomer', { customerData });
       } else {
-        const newId = document.getElementById('customerId')?.value.trim();
-        if (newId) customerData.customerId = newId;
         res = await api('addCustomer', { customerData });
       }
       
