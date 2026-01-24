@@ -63,6 +63,27 @@
       border-color: #1976d2;
     }
     
+    .pin-wrapper {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    
+    .pin-wrapper input {
+      margin-bottom: 0;
+    }
+    
+    .toggle-pin {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #666;
+    }
+    
     .auth-btn {
       width: 100%;
       padding: 14px;
@@ -655,8 +676,11 @@
     <div class="auth-box">
       <h1>🔐 Order Dashboard</h1>
       <p>Enter your PIN to access the dashboard</p>
-      <input type="password" class="auth-input" id="pinInput" placeholder="••••••" maxlength="20">
-      <button class="auth-btn" id="loginBtn">Login</button>
+      <div class="pin-wrapper">
+        <input type="password" class="auth-input" id="pinInput" placeholder="••••••" maxlength="20">
+      <button type="button" class="toggle-pin" id="togglePin">👁️</button>
+    </div>
+    <button class="auth-btn" id="loginBtn">Login</button>
       <p class="auth-error" id="authError" style="display:none"></p>
     </div>
   </div>
@@ -1388,6 +1412,17 @@
       if (e.key === 'Enter') login();
     });
     document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('togglePin').addEventListener('click', () => {
+      const input = document.getElementById('pinInput');
+      const btn = document.getElementById('togglePin');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    });
     
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => switchTab(tab.dataset.tab));
