@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manufacturing - Order Management</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+    
+    /* Auth Screen */
+    .auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .auth-box {
+      background: #fff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    
+    .auth-box h1 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .auth-box p {
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 0.9rem;
+    }
+    
+    .auth-input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    
+    .auth-input:focus {
+      outline: none;
+      border-color: #ff9800;
+    }
+    
+    .pin-wrapper {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    
+    .pin-wrapper input {
+      margin-bottom: 0;
+    }
+    
+    .toggle-pin {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #666;
+    }
+    
+    .auth-btn {
+      width: 100%;
+      padding: 14px;
+      background: #ff9800;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .auth-btn:hover {
+      background: #f57c00;
+    }
+    
+    .auth-error {
+      color: #d32f2f;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+    
+    /* Main App */
+    .app-container {
+      display: none;
+    }
+    
+    .app-container.visible {
+      display: block;
+    }
+    
+    /* Header */
+    .header {
+      background: #ff9800;
+      color: #fff;
+      padding: 15px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 1.3rem;
+    }
+    
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    /* Content */
+    .content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    
+    .filter-select {
+      padding: 10px 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #fff;
+      min-width: 150px;
+    }
+    
+    .status-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .status-filter-btn {
+      padding: 8px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 20px;
+      background: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .status-filter-btn:hover {
+      border-color: #bdbdbd;
+    }
+    
+    .status-filter-btn.active {
+      border-color: #ff9800;
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    .status-filter-btn.pending.active {
+      border-color: #e65100;
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    .status-filter-btn.processing.active {
+      border-color: #1565c0;
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    
+    .status-filter-btn.ready.active {
+      border-color: #7b1fa2;
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+    
+    .status-filter-btn.delivered.active {
+      border-color: #2e7d32;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status-filter-btn.cancelled.active {
+      border-color: #c62828;
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    /* Cards */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    
+    .card-body {
+      padding: 15px 20px;
+    }
+    
+    /* Status Badges */
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    
+    .status.pending {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    .status.processing {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    
+    .status.ready {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+    
+    .status.delivered {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status.cancelled {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    /* Order Card */
+    .order-card {
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    
+    .order-card:hover {
+      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+    }
+    
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    
+    .order-id {
+      font-weight: 600;
+      color: #ff9800;
+    }
+    
+    .order-customer {
+      color: #333;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .order-date {
+      color: #999;
+      font-size: 0.85rem;
+    }
+    
+    .order-items-preview {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 10px 0;
+    }
+    
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .btn-primary {
+      background: #ff9800;
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      background: #f57c00;
+    }
+    
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+    
+    .btn-secondary:hover {
+      background: #bdbdbd;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    
+    .modal-overlay.visible {
+      display: flex;
+    }
+    
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 {
+      font-size: 1.2rem;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    /* Form */
+    .form-group {
+      margin-bottom: 18px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #333;
+      font-size: 0.9rem;
+    }
+    
+    .status-select {
+      padding: 10px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    /* Order Detail */
+    .order-detail-items {
+      margin: 15px 0;
+    }
+    
+    .order-detail-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .order-notes {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-style: italic;
+      color: #666;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+    
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #e0e0e0;
+      border-top-color: #ff9800;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 1.1rem;
+      }
+      
+      .content {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-box">
+      <h1>�icing Manufacturing</h1>
+      <p>Enter your PIN to access order management</p>
+      <div class="pin-wrapper">
+        <input type="password" class="auth-input" id="pinInput" placeholder="••••••" maxlength="20">
+        <button type="button" class="toggle-pin" id="togglePin">👁️</button>
+      </div>
+      <button class="auth-btn" id="loginBtn">Login</button>
+      <p class="auth-error" id="authError" style="display:none"></p>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div class="app-container" id="appContainer">
+    <header class="header">
+      <div class="header-inner">
+        <h1>🏭 Manufacturing - Orders</h1>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+    
+    <main class="content">
+      <div class="filters">
+        <div class="status-filters" id="statusFilters">
+          <button class="status-filter-btn pending active" data-status="pending">Pending</button>
+          <button class="status-filter-btn processing active" data-status="processing">Processing</button>
+          <button class="status-filter-btn ready active" data-status="ready">Ready to Ship</button>
+          <button class="status-filter-btn delivered" data-status="delivered">Delivered</button>
+          <button class="status-filter-btn cancelled" data-status="cancelled">Cancelled</button>
+        </div>
+        <select class="filter-select" id="customerFilter">
+          <option value="">All Customers</option>
+        </select>
+      </div>
+      <div id="ordersList"></div>
+    </main>
+  </div>
+  
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Order Details</h2>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+  
+  <script>
+    // ====================
+    // CONFIGURATION
+    // ====================
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxwCyGsmHthmb6UjbEJGGiS6PKIKIJpER_Zy2GPwyMjGJvWhL_JxtlEHbD3eFCtwUQssw/exec';
+    
+    // ====================
+    // STATE
+    // ====================
+    let token = localStorage.getItem('mfgToken') || '';
+    let orders = [];
+    let customers = [];
+    let selectedStatuses = ['pending', 'processing', 'ready'];
+    
+    // ====================
+    // AUTH
+    // ====================
+    function checkAuth() {
+      if (token) {
+        showApp();
+        loadData();
+      }
+    }
+    
+    function login() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin) {
+        showAuthError('Please enter a PIN');
+        return;
+      }
+      
+      token = pin;
+      localStorage.setItem('mfgToken', token);
+      showApp();
+      loadData();
+    }
+    
+    function logout() {
+      token = '';
+      localStorage.removeItem('mfgToken');
+      document.getElementById('authScreen').style.display = 'flex';
+      document.getElementById('appContainer').classList.remove('visible');
+      document.getElementById('pinInput').value = '';
+    }
+    
+    function showApp() {
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('appContainer').classList.add('visible');
+    }
+    
+    function showAuthError(msg) {
+      const el = document.getElementById('authError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    
+    // ====================
+    // API CALLS
+    // ====================
+    async function api(action, params = {}) {
+      const url = new URL(API_URL);
+      url.searchParams.set('action', action);
+      url.searchParams.set('token', token);
+      
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.set(key, typeof value === 'object' ? JSON.stringify(value) : value);
+      });
+      
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.error === 'Unauthorized') {
+          showAuthError('Invalid PIN');
+          logout();
+          return null;
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('API Error:', error);
+        return { success: false, error: error.message };
+      }
+    }
+    
+    async function loadData() {
+      document.getElementById('ordersList').innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Loading orders...</p>
+        </div>
+      `;
+      
+      const [ordersRes, customersRes] = await Promise.all([
+        api('getOrders'),
+        api('getCustomers')
+      ]);
+      
+      if (ordersRes?.success) orders = ordersRes.data;
+      if (customersRes?.success) customers = customersRes.data;
+      
+      renderOrders();
+      populateCustomerFilter();
+    }
+    
+    // ====================
+    // RENDER
+    // ====================
+    function populateCustomerFilter() {
+      const select = document.getElementById('customerFilter');
+      select.innerHTML = '<option value="">All Customers</option>' +
+        customers.map(c => `<option value="${c.customerId}">${escapeHtml(c.customerName)}</option>`).join('');
+    }
+    
+    function renderOrders() {
+      const customerFilter = document.getElementById('customerFilter').value;
+      
+      let filtered = orders;
+      if (selectedStatuses.length > 0) {
+        filtered = filtered.filter(o => selectedStatuses.includes(o.status));
+      }
+      if (customerFilter) filtered = filtered.filter(o => o.customerId === customerFilter);
+      
+      if (filtered.length === 0) {
+        document.getElementById('ordersList').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📋</div>
+            <p>No orders found</p>
+          </div>
+        `;
+        return;
+      }
+      
+      document.getElementById('ordersList').innerHTML = filtered.map(order => {
+        const itemsPreview = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+        const date = new Date(order.timestamp).toLocaleString();
+        
+        return `
+          <div class="card order-card" onclick="showOrderDetail('${order.orderId}')">
+            <div class="card-body">
+              <div class="order-header">
+                <div>
+                  <div class="order-id">${order.orderId}</div>
+                  <div class="order-customer">${escapeHtml(order.customerName)}</div>
+                  <div class="order-date">${date}</div>
+                </div>
+                <span class="status ${order.status}">${formatStatus(order.status)}</span>
+              </div>
+              <div class="order-items-preview">${escapeHtml(itemsPreview)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function formatStatus(status) {
+      const labels = {
+        pending: 'Pending',
+        processing: 'Processing',
+        ready: 'Ready to Ship',
+        delivered: 'Delivered',
+        cancelled: 'Cancelled'
+      };
+      return labels[status] || status;
+    }
+    
+    function toggleStatusFilter(status) {
+      const index = selectedStatuses.indexOf(status);
+      if (index > -1) {
+        selectedStatuses.splice(index, 1);
+      } else {
+        selectedStatuses.push(status);
+      }
+      
+      document.querySelectorAll('.status-filter-btn').forEach(btn => {
+        if (selectedStatuses.includes(btn.dataset.status)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      renderOrders();
+    }
+    
+    function showOrderDetail(orderId) {
+      const order = orders.find(o => o.orderId === orderId);
+      if (!order) return;
+      
+      const date = new Date(order.timestamp).toLocaleString();
+      
+      openModal('Order Details', `
+        <div>
+          <strong>Order ID:</strong> ${order.orderId}<br>
+          <strong>Customer:</strong> ${escapeHtml(order.customerName)}<br>
+          <strong>Date:</strong> ${date}
+        </div>
+        
+        <div class="order-detail-items">
+          ${order.items.map(item => `
+            <div class="order-detail-item">
+              <div>
+                <strong>${escapeHtml(item.name)}</strong>
+              </div>
+              <div>x${item.qty}</div>
+            </div>
+          `).join('')}
+        </div>
+        
+        ${order.notes ? `<div class="order-notes">"${escapeHtml(order.notes)}"</div>` : ''}
+        
+        <div class="form-group">
+          <label>Update Status</label>
+          <select class="status-select" id="orderStatusSelect">
+            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+            <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready to Ship</option>
+            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </div>
+      `, `
+        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+        <button class="btn btn-primary" onclick="updateOrderStatus('${orderId}')">Save</button>
+      `);
+    }
+    
+    async function updateOrderStatus(orderId) {
+      const newStatus = document.getElementById('orderStatusSelect').value;
+      const res = await api('updateOrderStatus', { orderId, status: newStatus });
+      
+      if (res?.success) {
+        closeModal();
+        await loadData();
+      } else {
+        alert('Failed to update order: ' + (res?.error || 'Unknown error'));
+      }
+    }
+    
+    // ====================
+    // MODAL
+    // ====================
+    function openModal(title, bodyHtml, footerHtml = '') {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = bodyHtml;
+      document.getElementById('modalFooter').innerHTML = footerHtml;
+      document.getElementById('modal').classList.add('visible');
+    }
+    
+    function closeModal() {
+      document.getElementById('modal').classList.remove('visible');
+    }
+    
+    // ====================
+    // UTILS
+    // ====================
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    
+    // ====================
+    // EVENT LISTENERS
+    // ====================
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('pinInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') login();
+    });
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('togglePin').addEventListener('click', () => {
+      const input = document.getElementById('pinInput');
+      const btn = document.getElementById('togglePin');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    });
+    
+    document.querySelectorAll('.status-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => toggleStatusFilter(btn.dataset.status));
+    });
+    document.getElementById('customerFilter').addEventListener('change', renderOrders);
+    
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target.id === 'modal') closeModal();
+    });
+    
+    // ====================
+    // INIT
+    // ====================
+    checkAuth();
+  </script>
+</body>
+</html>
