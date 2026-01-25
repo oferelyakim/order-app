@@ -491,7 +491,7 @@
   <!-- Auth Screen -->
   <div class="auth-screen" id="authScreen">
     <div class="auth-box">
-      <h1>�icing Manufacturing</h1>
+      <h1>📦 Manufacturing</h1>
       <p>Enter your PIN to access order management</p>
       <div class="pin-wrapper">
         <input type="password" class="auth-input" id="pinInput" placeholder="••••••" maxlength="20">
@@ -730,6 +730,7 @@
       if (!order) return;
       
       const date = new Date(order.timestamp).toLocaleString();
+      const showWaybill = order.status === 'ready' || order.status === 'delivered';
       
       openModal('Order Details', `
         <div>
@@ -751,9 +752,15 @@
         
         ${order.notes ? `<div class="order-notes">"${escapeHtml(order.notes)}"</div>` : ''}
         
+        ${showWaybill ? `
+          <button class="btn btn-secondary" onclick="downloadWaybill('${order.orderId}')" style="margin-bottom:15px;width:100%;">
+            📄 Download Waybill
+          </button>
+        ` : ''}
+        
         <div class="form-group">
           <label>Update Status</label>
-          <select class="status-select" id="orderStatusSelect">
+          <select class="status-select" id="orderStatusSelect" data-old-status="${order.status}">
             <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
             <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
             <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready to Ship</option>
@@ -767,9 +774,92 @@
       `);
     }
     
+    function downloadWaybill(orderId) {
+      const order = orders.find(o => o.orderId === orderId);
+      if (!order) return;
+      
+      const date = new Date(order.timestamp).toLocaleDateString();
+      const itemsHtml = order.items.map(i => `
+        <tr>
+          <td style="border:1px solid #ccc;padding:8px;">${escapeHtml(i.name)}</td>
+          <td style="border:1px solid #ccc;padding:8px;text-align:center;">${i.qty}</td>
+        </tr>
+      `).join('');
+      
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Waybill - ${order.orderId}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; }
+            h1 { text-align: center; margin-bottom: 30px; }
+            .info { margin-bottom: 30px; }
+            .info-row { margin-bottom: 10px; }
+            .label { font-weight: bold; display: inline-block; width: 100px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: #f5f5f5; border: 1px solid #ccc; padding: 10px; text-align: left; }
+            .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <h1>תעודת משלוח / Waybill</h1>
+          
+          <div class="info">
+            <div class="info-row"><span class="label">Order ID:</span> ${order.orderId}</div>
+            <div class="info-row"><span class="label">Date:</span> ${date}</div>
+          </div>
+          
+          <div class="info">
+            <div class="info-row"><span class="label">From:</span> Uri Niv Boxes</div>
+          </div>
+          
+          <div class="info">
+            <div class="info-row"><span class="label">To:</span> ${escapeHtml(order.customerName)}</div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th style="width:100px;text-align:center;">Quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          
+          <div class="footer">
+            Generated on ${new Date().toLocaleString()}
+          </div>
+        </body>
+        </html>
+      `;
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => { printWindow.print(); }, 500);
+    }
+    
     async function updateOrderStatus(orderId) {
-      const newStatus = document.getElementById('orderStatusSelect').value;
-      const res = await api('updateOrderStatus', { orderId, status: newStatus });
+      const selectEl = document.getElementById('orderStatusSelect');
+      const newStatus = selectEl.value;
+      const oldStatus = selectEl.dataset.oldStatus;
+      
+      let updateInventory = false;
+      
+      // Check if inventory update is needed
+      if (newStatus === 'ready' && oldStatus !== 'ready' && oldStatus !== 'delivered') {
+        updateInventory = confirm('Update inventory? This will deduct the order quantities from stock.');
+      } else if (oldStatus === 'ready' && (newStatus === 'pending' || newStatus === 'processing' || newStatus === 'cancelled')) {
+        updateInventory = confirm('Update inventory? This will add the order quantities back to stock.');
+      }
+      
+      const res = await api('updateOrderStatus', { orderId, status: newStatus, updateInventory });
       
       if (res?.success) {
         closeModal();
