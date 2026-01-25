@@ -259,6 +259,11 @@
       color: #1565c0;
     }
     
+    .status.ready {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+    
     .status.delivered {
       background: #e8f5e9;
       color: #2e7d32;
@@ -320,6 +325,7 @@
       gap: 10px;
       margin-bottom: 20px;
       flex-wrap: wrap;
+      align-items: flex-start;
     }
     
     .filter-select {
@@ -334,6 +340,62 @@
     .filter-select:focus {
       outline: none;
       border-color: #1976d2;
+    }
+    
+    .status-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .status-filter-btn {
+      padding: 8px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 20px;
+      background: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .status-filter-btn:hover {
+      border-color: #bdbdbd;
+    }
+    
+    .status-filter-btn.active {
+      border-color: #1976d2;
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+    
+    .status-filter-btn.pending.active {
+      border-color: #e65100;
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    .status-filter-btn.processing.active {
+      border-color: #1565c0;
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    
+    .status-filter-btn.ready.active {
+      border-color: #7b1fa2;
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+    
+    .status-filter-btn.delivered.active {
+      border-color: #2e7d32;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status-filter-btn.cancelled.active {
+      border-color: #c62828;
+      background: #ffebee;
+      color: #c62828;
     }
     
     /* Table */
@@ -707,13 +769,13 @@
       <!-- Orders Panel -->
       <div class="panel active" id="ordersPanel">
         <div class="filters">
-          <select class="filter-select" id="statusFilter">
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <div class="status-filters" id="statusFilters">
+            <button class="status-filter-btn pending active" data-status="pending">Pending</button>
+            <button class="status-filter-btn processing active" data-status="processing">Processing</button>
+            <button class="status-filter-btn ready active" data-status="ready">Ready to Ship</button>
+            <button class="status-filter-btn delivered" data-status="delivered">Delivered</button>
+            <button class="status-filter-btn cancelled" data-status="cancelled">Cancelled</button>
+          </div>
           <select class="filter-select" id="customerFilter">
             <option value="">All Customers</option>
           </select>
@@ -813,6 +875,7 @@
     let products = [];
     let inventory = [];
     let customers = [];
+    let selectedStatuses = ['pending', 'processing', 'ready'];
     
     // ====================
     // AUTH
@@ -952,11 +1015,12 @@
     
     // --- Orders ---
     function renderOrders() {
-      const statusFilter = document.getElementById('statusFilter').value;
       const customerFilter = document.getElementById('customerFilter').value;
       
       let filtered = orders;
-      if (statusFilter) filtered = filtered.filter(o => o.status === statusFilter);
+      if (selectedStatuses.length > 0) {
+        filtered = filtered.filter(o => selectedStatuses.includes(o.status));
+      }
       if (customerFilter) filtered = filtered.filter(o => o.customerId === customerFilter);
       
       if (filtered.length === 0) {
@@ -982,7 +1046,7 @@
                   <div class="order-customer">${escapeHtml(order.customerName)}</div>
                   <div class="order-date">${date}</div>
                 </div>
-                <span class="status ${order.status}">${order.status}</span>
+                <span class="status ${order.status}">${formatStatus(order.status)}</span>
               </div>
               <div class="order-items-preview">${escapeHtml(itemsPreview)}</div>
               <div class="order-total">$${parseFloat(order.totalAmount).toFixed(2)}</div>
@@ -990,6 +1054,37 @@
           </div>
         `;
       }).join('');
+    }
+    
+    function formatStatus(status) {
+      const labels = {
+        pending: 'Pending',
+        processing: 'Processing',
+        ready: 'Ready to Ship',
+        delivered: 'Delivered',
+        cancelled: 'Cancelled'
+      };
+      return labels[status] || status;
+    }
+    
+    function toggleStatusFilter(status) {
+      const index = selectedStatuses.indexOf(status);
+      if (index > -1) {
+        selectedStatuses.splice(index, 1);
+      } else {
+        selectedStatuses.push(status);
+      }
+      
+      // Update button states
+      document.querySelectorAll('.status-filter-btn').forEach(btn => {
+        if (selectedStatuses.includes(btn.dataset.status)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      renderOrders();
     }
     
     function showOrderDetail(orderId) {
@@ -1029,6 +1124,7 @@
           <select class="status-select" id="orderStatusSelect">
             <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
             <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+            <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready to Ship</option>
             <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
             <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
           </select>
@@ -1426,7 +1522,9 @@
       if (e.target.id === 'modal') closeModal();
     });
     
-    document.getElementById('statusFilter').addEventListener('change', renderOrders);
+    document.querySelectorAll('.status-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => toggleStatusFilter(btn.dataset.status));
+    });
     document.getElementById('customerFilter').addEventListener('change', renderOrders);
     
     // ====================
