@@ -5,1047 +5,231 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>הזמנה</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f5f5;
-      min-height: 100vh;
-      padding: 20px;
-      direction: rtl;
-    }
-    
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    
-    /* Header */
-    .header {
-      text-align: center;
-      padding: 20px;
-      background: #fff;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .header h1 {
-      color: #333;
-      font-size: 1.5rem;
-      margin-bottom: 5px;
-    }
-    
-    .header .customer-name {
-      color: #666;
-      font-size: 0.9rem;
-    }
-    
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    
-    .tab-btn {
-      flex: 1;
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      background: #fff;
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .tab-btn:hover {
-      border-color: #bdbdbd;
-    }
-    
-    .tab-btn.active {
-      border-color: #1976d2;
-      background: #e3f2fd;
-      color: #1976d2;
-    }
-    
-    /* Error/Loading States */
-    .error-screen, .loading-screen {
-      text-align: center;
-      padding: 60px 20px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .error-screen {
-      color: #d32f2f;
-    }
-    
-    .error-screen h2 {
-      margin-bottom: 10px;
-    }
-    
-    .loading-screen {
-      color: #666;
-    }
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e0e0e0;
-      border-top-color: #1976d2;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    /* Panels */
-    .panel {
-      display: none;
-    }
-    
-    .panel.active {
-      display: block;
-    }
-    
-    /* Product Grid */
-    .products {
-      display: grid;
-      gap: 15px;
-    }
-    
-    .product-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      display: flex;
-      gap: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .product-image {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      object-fit: cover;
-      background: #e0e0e0;
-      flex-shrink: 0;
-    }
-    
-    .product-info {
-      flex: 1;
-      min-width: 0;
-    }
-    
-    .product-name {
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 10px;
-    }
-    
-    .qty-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .qty-btn {
-      width: 36px;
-      height: 36px;
-      border: none;
-      border-radius: 8px;
-      background: #e3f2fd;
-      color: #1976d2;
-      font-size: 1.2rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .qty-btn:hover {
-      background: #bbdefb;
-    }
-    
-    .qty-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .qty-value {
-      min-width: 30px;
-      text-align: center;
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-    
-    /* Cart Summary */
-    .cart-summary {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #fff;
-      padding: 15px 20px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      display: none;
-    }
-    
-    .cart-summary.visible {
-      display: block;
-    }
-    
-    .cart-inner {
-      max-width: 600px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-    }
-    
-    .cart-info {
-      flex: 1;
-    }
-    
-    .cart-items-count {
-      font-size: 0.85rem;
-      color: #666;
-    }
-    
-    .checkout-btn {
-      background: #1976d2;
-      color: #fff;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    
-    .checkout-btn:hover {
-      background: #1565c0;
-    }
-    
-    .checkout-btn:disabled {
-      background: #bdbdbd;
-      cursor: not-allowed;
-    }
-    
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 100;
-    }
-    
-    .modal-overlay.visible {
-      display: flex;
-    }
-    
-    .modal {
-      background: #fff;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 400px;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    
-    .modal-header {
-      padding: 20px;
-      border-bottom: 1px solid #e0e0e0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .modal-header h2 {
-      font-size: 1.2rem;
-    }
-    
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: #666;
-    }
-    
-    .modal-body {
-      padding: 20px;
-    }
-    
-    .order-items {
-      margin-bottom: 20px;
-    }
-    
-    .order-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .order-item:last-child {
-      border-bottom: none;
-    }
-    
-    .order-item-name {
-      color: #333;
-    }
-    
-    .order-item-qty {
-      color: #666;
-      font-size: 0.9rem;
-    }
-    
-    .notes-input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 1rem;
-      resize: vertical;
-      min-height: 80px;
-      margin-bottom: 20px;
-      direction: rtl;
-    }
-    
-    .notes-input:focus {
-      outline: none;
-      border-color: #1976d2;
-    }
-    
-    .submit-btn {
-      width: 100%;
-      background: #4caf50;
-      color: #fff;
-      border: none;
-      padding: 16px;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    
-    .submit-btn:hover {
-      background: #43a047;
-    }
-    
-    .submit-btn:disabled {
-      background: #bdbdbd;
-      cursor: not-allowed;
-    }
-    
-    /* Success Screen */
-    .success-screen {
-      text-align: center;
-      padding: 40px 20px;
-    }
-    
-    .success-icon {
-      width: 80px;
-      height: 80px;
-      background: #e8f5e9;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      font-size: 2.5rem;
-    }
-    
-    .success-screen h2 {
-      color: #2e7d32;
-      margin-bottom: 10px;
-    }
-    
-    .success-screen p {
-      color: #666;
-      margin-bottom: 20px;
-    }
-    
-    .new-order-btn {
-      background: #1976d2;
-      color: #fff;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    
-    /* My Orders */
-    .orders-filters {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-    
-    .status-filter-btn {
-      padding: 8px 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 20px;
-      background: #fff;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .status-filter-btn:hover {
-      border-color: #bdbdbd;
-    }
-    
-    .status-filter-btn.active {
-      border-color: #1976d2;
-      background: #e3f2fd;
-      color: #1976d2;
-    }
-    
-    .my-order-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .my-order-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
-    }
-    
-    .my-order-id {
-      font-weight: 600;
-      color: #1976d2;
-    }
-    
-    .my-order-date {
-      color: #999;
-      font-size: 0.85rem;
-    }
-    
-    .status {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-    
-    .status.pending {
-      background: #fff3e0;
-      color: #e65100;
-    }
-    
-    .status.processing {
-      background: #e3f2fd;
-      color: #1565c0;
-    }
-    
-    .status.ready {
-      background: #f3e5f5;
-      color: #7b1fa2;
-    }
-    
-    .status.delivered {
-      background: #e8f5e9;
-      color: #2e7d32;
-    }
-    
-    .status.cancelled {
-      background: #ffebee;
-      color: #c62828;
-    }
-    
-    .my-order-items {
-      color: #666;
-      font-size: 0.9rem;
-      margin-bottom: 10px;
-    }
-    
-    .waybill-btn {
-      background: #7b1fa2;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .waybill-btn:hover {
-      background: #6a1b9a;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: #999;
-    }
-    
-    .empty-state .icon {
-      font-size: 3rem;
-      margin-bottom: 15px;
-    }
-    
-    /* Spacer for fixed cart */
-    .bottom-spacer {
-      height: 100px;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; min-height: 100vh; padding: 20px; direction: rtl; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header { text-align: center; padding: 20px; background: #fff; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .header h1 { color: #333; font-size: 1.5rem; margin-bottom: 5px; }
+    .header .customer-name { color: #666; font-size: 0.9rem; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; background: #fff; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .tab-btn:hover { border-color: #bdbdbd; }
+    .tab-btn.active { border-color: #1976d2; background: #e3f2fd; color: #1976d2; }
+    .error-screen, .loading-screen { text-align: center; padding: 60px 20px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .error-screen { color: #d32f2f; }
+    .loading-screen { color: #666; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #1976d2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .products { display: grid; gap: 15px; }
+    .product-card { background: #fff; border-radius: 12px; padding: 15px; display: flex; gap: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .product-image { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #e0e0e0; flex-shrink: 0; }
+    .product-info { flex: 1; min-width: 0; }
+    .product-name { font-weight: 600; color: #333; margin-bottom: 10px; }
+    .qty-controls { display: flex; align-items: center; gap: 10px; }
+    .qty-btn { width: 36px; height: 36px; border: none; border-radius: 8px; background: #e3f2fd; color: #1976d2; font-size: 1.2rem; cursor: pointer; }
+    .qty-btn:hover { background: #bbdefb; }
+    .qty-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .qty-value { min-width: 30px; text-align: center; font-weight: 600; font-size: 1.1rem; }
+    .cart-summary { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 15px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: none; }
+    .cart-summary.visible { display: block; }
+    .cart-inner { max-width: 600px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .cart-items-count { font-size: 0.85rem; color: #666; }
+    .checkout-btn { background: #1976d2; color: #fff; border: none; padding: 14px 28px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+    .modal-overlay.visible { display: flex; }
+    .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h2 { font-size: 1.2rem; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
+    .modal-body { padding: 20px; }
+    .order-items { margin-bottom: 20px; }
+    .order-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .notes-input { width: 100%; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 1rem; resize: vertical; min-height: 80px; margin-bottom: 20px; direction: rtl; }
+    .submit-btn { width: 100%; background: #4caf50; color: #fff; border: none; padding: 16px; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+    .submit-btn:disabled { background: #bdbdbd; }
+    .success-screen { text-align: center; padding: 40px 20px; }
+    .success-icon { width: 80px; height: 80px; background: #e8f5e9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2.5rem; }
+    .success-screen h2 { color: #2e7d32; margin-bottom: 10px; }
+    .new-order-btn { background: #1976d2; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+    .orders-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .status-filter-btn { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 20px; background: #fff; font-size: 0.8rem; cursor: pointer; }
+    .status-filter-btn.active { border-color: #1976d2; background: #e3f2fd; color: #1976d2; }
+    .my-order-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .my-order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .my-order-id { font-weight: 600; color: #1976d2; }
+    .my-order-date { color: #999; font-size: 0.85rem; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+    .status.pending { background: #fff3e0; color: #e65100; }
+    .status.processing { background: #e3f2fd; color: #1565c0; }
+    .status.ready { background: #f3e5f5; color: #7b1fa2; }
+    .status.delivered { background: #e8f5e9; color: #2e7d32; }
+    .status.cancelled { background: #ffebee; color: #c62828; }
+    .my-order-items { color: #666; font-size: 0.9rem; margin-bottom: 10px; }
+    .waybill-btn { background: #7b1fa2; color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+    .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 15px; }
+    .bottom-spacer { height: 100px; }
   </style>
 </head>
 <body>
-  <div class="container" id="app">
-    <!-- Loading State -->
-    <div class="loading-screen" id="loadingScreen">
-      <div class="spinner"></div>
-      <p>טוען...</p>
-    </div>
-  </div>
-
-  <!-- Cart Summary (Fixed Bottom) -->
-  <div class="cart-summary" id="cartSummary">
-    <div class="cart-inner">
-      <div class="cart-info">
-        <div class="cart-items-count" id="cartItemsCount">0 פריטים</div>
-      </div>
-      <button class="checkout-btn" id="checkoutBtn">סקירת הזמנה</button>
-    </div>
-  </div>
-
-  <!-- Checkout Modal -->
-  <div class="modal-overlay" id="checkoutModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>סקירת הזמנה</h2>
-        <button class="modal-close" id="closeModal">&times;</button>
-      </div>
-      <div class="modal-body" id="modalBody">
-        <!-- Populated by JS -->
-      </div>
-    </div>
-  </div>
+  <div class="container" id="app"><div class="loading-screen"><div class="spinner"></div><p>טוען...</p></div></div>
+  <div class="cart-summary" id="cartSummary"><div class="cart-inner"><div class="cart-items-count" id="cartItemsCount">0 פריטים</div><button class="checkout-btn" id="checkoutBtn">סקירת הזמנה</button></div></div>
+  <div class="modal-overlay" id="checkoutModal"><div class="modal"><div class="modal-header"><h2>סקירת הזמנה</h2><button class="modal-close" id="closeModal">&times;</button></div><div class="modal-body" id="modalBody"></div></div></div>
 
   <script>
-    // ====================
-    // CONFIGURATION
-    // ====================
     const API_URL = 'https://script.google.com/macros/s/AKfycbz1twL3kPkXawFM-AqDqswcgEI2sd32HGylQeYgmpQAat-Hwu9LaZ1ukMHUirCpEm3o0A/exec';
+    const COMPANY = { name: 'אורי ניב קרטונים', id: '___________', phone: '___________', address: '___________' };
     
-    // ====================
-    // STATE
-    // ====================
-    let customer = null;
-    let products = [];
-    let cart = {}; // { productId: qty }
-    let currentTab = 'order';
-    let myOrders = [];
-    let selectedStatuses = ['pending', 'processing', 'ready'];
+    let customer = null, products = [], cart = {}, currentTab = 'order', myOrders = [], selectedStatuses = ['pending', 'processing', 'ready'];
     
-    // ====================
-    // INIT
-    // ====================
     async function init() {
       const customerId = new URLSearchParams(window.location.search).get('c');
-      
-      if (!customerId) {
-        showError('קישור לא תקין', 'אנא השתמש בקישור ההזמנה שנשלח אליך.');
-        return;
-      }
-      
+      if (!customerId) { showError('קישור לא תקין', 'אנא השתמש בקישור ההזמנה שנשלח אליך.'); return; }
       try {
-        // Validate customer
         const customerRes = await fetch(`${API_URL}?action=getCustomer&customerId=${encodeURIComponent(customerId)}`);
         const customerData = await customerRes.json();
-        
-        if (!customerData.success || !customerData.data) {
-          showError('לקוח לא תקין', 'קישור ההזמנה שלך אינו תקף. אנא צור קשר לקבלת עזרה.');
-          return;
-        }
-        
+        if (!customerData.success || !customerData.data) { showError('לקוח לא תקין', 'קישור ההזמנה שלך אינו תקף.'); return; }
         customer = customerData.data;
-        
-        // Load products
         const productsRes = await fetch(`${API_URL}?action=getProducts`);
         const productsData = await productsRes.json();
-        
-        if (!productsData.success) {
-          showError('שגיאה', 'נכשל בטעינת המוצרים. אנא נסה שוב.');
-          return;
-        }
-        
+        if (!productsData.success) { showError('שגיאה', 'נכשל בטעינת המוצרים.'); return; }
         products = productsData.data;
         renderApp();
-        
-      } catch (error) {
-        console.error('Init error:', error);
-        showError('שגיאת חיבור', 'לא ניתן להתחבר. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
-      }
+      } catch (error) { showError('שגיאת חיבור', 'לא ניתן להתחבר.'); }
     }
     
-    // ====================
-    // RENDER
-    // ====================
-    function showError(title, message) {
-      document.getElementById('app').innerHTML = `
-        <div class="error-screen">
-          <h2>${title}</h2>
-          <p>${message}</p>
-        </div>
-      `;
-    }
+    function showError(title, message) { document.getElementById('app').innerHTML = `<div class="error-screen"><h2>${title}</h2><p>${message}</p></div>`; }
     
     function renderApp() {
-      const app = document.getElementById('app');
-      
-      app.innerHTML = `
-        <div class="header">
-          <h1>📦 הזמנה</h1>
-          <p class="customer-name">שלום, ${escapeHtml(customer.customerName)}</p>
-        </div>
-        
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="order" id="tabOrder">🛒 הזמנה חדשה</button>
-          <button class="tab-btn" data-tab="myorders" id="tabMyOrders">📋 ההזמנות שלי</button>
-        </div>
-        
-        <div class="panel active" id="orderPanel">
-          <div class="products" id="productsList">
-            ${products.map(renderProduct).join('')}
-          </div>
-          <div class="bottom-spacer"></div>
-        </div>
-        
+      document.getElementById('app').innerHTML = `
+        <div class="header"><h1>📦 הזמנה</h1><p class="customer-name">שלום, ${escapeHtml(customer.customerName)}</p></div>
+        <div class="tabs"><button class="tab-btn active" data-tab="order" id="tabOrder">🛒 הזמנה חדשה</button><button class="tab-btn" data-tab="myorders" id="tabMyOrders">📋 ההזמנות שלי</button></div>
+        <div class="panel active" id="orderPanel"><div class="products">${products.map(renderProduct).join('')}</div><div class="bottom-spacer"></div></div>
         <div class="panel" id="myOrdersPanel">
-          <div class="orders-filters" id="ordersFilters">
-            <button class="status-filter-btn active" data-status="pending">ממתין</button>
-            <button class="status-filter-btn active" data-status="processing">בטיפול</button>
-            <button class="status-filter-btn active" data-status="ready">מוכן למשלוח</button>
-            <button class="status-filter-btn" data-status="delivered">נמסר</button>
-            <button class="status-filter-btn" data-status="cancelled">בוטל</button>
-          </div>
-          <div id="myOrdersList">
-            <div class="loading-screen">
-              <div class="spinner"></div>
-              <p>טוען הזמנות...</p>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      // Attach event listeners
-      document.querySelectorAll('.qty-btn').forEach(btn => {
-        btn.addEventListener('click', handleQtyChange);
-      });
-      
+          <div class="orders-filters" id="ordersFilters"><button class="status-filter-btn active" data-status="pending">ממתין</button><button class="status-filter-btn active" data-status="processing">בטיפול</button><button class="status-filter-btn active" data-status="ready">מוכן</button><button class="status-filter-btn" data-status="delivered">נמסר</button><button class="status-filter-btn" data-status="cancelled">בוטל</button></div>
+          <div id="myOrdersList"><div class="loading-screen"><div class="spinner"></div><p>טוען...</p></div></div>
+        </div>`;
+      document.querySelectorAll('.qty-btn').forEach(btn => btn.addEventListener('click', handleQtyChange));
       document.getElementById('checkoutBtn').addEventListener('click', openCheckoutModal);
       document.getElementById('closeModal').addEventListener('click', closeCheckoutModal);
-      document.getElementById('checkoutModal').addEventListener('click', (e) => {
-        if (e.target.id === 'checkoutModal') closeCheckoutModal();
-      });
-      
+      document.getElementById('checkoutModal').addEventListener('click', e => { if (e.target.id === 'checkoutModal') closeCheckoutModal(); });
       document.getElementById('tabOrder').addEventListener('click', () => switchTab('order'));
       document.getElementById('tabMyOrders').addEventListener('click', () => switchTab('myorders'));
-      
-      document.querySelectorAll('#ordersFilters .status-filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => toggleOrdersFilter(btn.dataset.status));
-      });
-      
+      document.querySelectorAll('#ordersFilters .status-filter-btn').forEach(btn => btn.addEventListener('click', () => toggleOrdersFilter(btn.dataset.status)));
       updateCartSummary();
     }
     
-    function renderProduct(product) {
-      const qty = cart[product.id] || 0;
-      const imgSrc = product.imageUrl || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23e0e0e0" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%23999" font-size="14">אין תמונה</text></svg>';
-      
-      return `
-        <div class="product-card" data-id="${product.id}">
-          <img class="product-image" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(product.name)}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23e0e0e0%22 width=%22100%22 height=%22100%22/></svg>'">
-          <div class="product-info">
-            <div class="product-name">${escapeHtml(product.name)}</div>
-            <div class="qty-controls">
-              <button class="qty-btn" data-action="decrease" data-id="${product.id}" ${qty === 0 ? 'disabled' : ''}>−</button>
-              <span class="qty-value" id="qty-${product.id}">${qty}</span>
-              <button class="qty-btn" data-action="increase" data-id="${product.id}">+</button>
-            </div>
-          </div>
-        </div>
-      `;
+    function renderProduct(p) {
+      const qty = cart[p.id] || 0;
+      return `<div class="product-card"><img class="product-image" src="${escapeHtml(p.imageUrl || '')}" onerror="this.style.display='none'"><div class="product-info"><div class="product-name">${escapeHtml(p.name)}</div><div class="qty-controls"><button class="qty-btn" data-action="decrease" data-id="${p.id}" ${qty===0?'disabled':''}>−</button><span class="qty-value" id="qty-${p.id}">${qty}</span><button class="qty-btn" data-action="increase" data-id="${p.id}">+</button></div></div></div>`;
     }
     
-    // ====================
-    // TABS
-    // ====================
     function switchTab(tab) {
       currentTab = tab;
-      
       document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
-      
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      
-      if (tab === 'order') {
-        document.getElementById('orderPanel').classList.add('active');
-        document.getElementById('cartSummary').style.display = '';
-        updateCartSummary();
-      } else {
-        document.getElementById('myOrdersPanel').classList.add('active');
-        document.getElementById('cartSummary').style.display = 'none';
-        loadMyOrders();
-      }
+      if (tab === 'order') { document.getElementById('orderPanel').classList.add('active'); document.getElementById('cartSummary').style.display = ''; updateCartSummary(); }
+      else { document.getElementById('myOrdersPanel').classList.add('active'); document.getElementById('cartSummary').style.display = 'none'; loadMyOrders(); }
     }
     
-    // ====================
-    // MY ORDERS
-    // ====================
     async function loadMyOrders() {
       try {
         const res = await fetch(`${API_URL}?action=getCustomerOrders&customerId=${encodeURIComponent(customer.customerId)}`);
         const data = await res.json();
-        
-        if (data.success) {
-          myOrders = data.data;
-          renderMyOrders();
-        } else {
-          document.getElementById('myOrdersList').innerHTML = `
-            <div class="empty-state">
-              <div class="icon">❌</div>
-              <p>נכשל בטעינת הזמנות</p>
-            </div>
-          `;
-        }
-      } catch (error) {
-        console.error('Load orders error:', error);
-        document.getElementById('myOrdersList').innerHTML = `
-          <div class="empty-state">
-            <div class="icon">❌</div>
-            <p>שגיאת חיבור</p>
-          </div>
-        `;
-      }
+        if (data.success) { myOrders = data.data; renderMyOrders(); }
+        else { document.getElementById('myOrdersList').innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>נכשל בטעינת הזמנות</p></div>'; }
+      } catch (e) { document.getElementById('myOrdersList').innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>שגיאת חיבור</p></div>'; }
     }
     
     function renderMyOrders() {
-      let filtered = myOrders;
-      if (selectedStatuses.length > 0) {
-        filtered = filtered.filter(o => selectedStatuses.includes(o.status));
-      }
-      
-      if (filtered.length === 0) {
-        document.getElementById('myOrdersList').innerHTML = `
-          <div class="empty-state">
-            <div class="icon">📋</div>
-            <p>לא נמצאו הזמנות</p>
-          </div>
-        `;
-        return;
-      }
-      
+      let filtered = selectedStatuses.length > 0 ? myOrders.filter(o => selectedStatuses.includes(o.status)) : myOrders;
+      if (filtered.length === 0) { document.getElementById('myOrdersList').innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>לא נמצאו הזמנות</p></div>'; return; }
       document.getElementById('myOrdersList').innerHTML = filtered.map(order => {
         const date = new Date(order.timestamp).toLocaleDateString('he-IL');
-        const itemsText = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+        const items = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
         const showWaybill = order.status === 'ready' || order.status === 'delivered';
-        
-        return `
-          <div class="my-order-card">
-            <div class="my-order-header">
-              <div>
-                <div class="my-order-id">${order.orderId}</div>
-                <div class="my-order-date">${date}</div>
-              </div>
-              <span class="status ${order.status}">${formatStatus(order.status)}</span>
-            </div>
-            <div class="my-order-items">${escapeHtml(itemsText)}</div>
-            ${showWaybill ? `
-              <button class="waybill-btn" onclick="downloadWaybill('${order.orderId}')">
-                📄 הורד תעודת משלוח
-              </button>
-            ` : ''}
-          </div>
-        `;
+        return `<div class="my-order-card"><div class="my-order-header"><div><div class="my-order-id">${order.orderId}</div><div class="my-order-date">${date}</div></div><span class="status ${order.status}">${formatStatus(order.status)}</span></div><div class="my-order-items">${escapeHtml(items)}</div>${showWaybill ? `<button class="waybill-btn" onclick="downloadWaybill('${order.orderId}')">📄 תעודת משלוח</button>` : ''}</div>`;
       }).join('');
     }
     
-    function formatStatus(status) {
-      const labels = {
-        pending: 'ממתין',
-        processing: 'בטיפול',
-        ready: 'מוכן למשלוח',
-        delivered: 'נמסר',
-        cancelled: 'בוטל'
-      };
-      return labels[status] || status;
-    }
-    
+    function formatStatus(s) { return {pending:'ממתין',processing:'בטיפול',ready:'מוכן למשלוח',delivered:'נמסר',cancelled:'בוטל'}[s]||s; }
     function toggleOrdersFilter(status) {
-      const index = selectedStatuses.indexOf(status);
-      if (index > -1) {
-        selectedStatuses.splice(index, 1);
-      } else {
-        selectedStatuses.push(status);
-      }
-      
-      document.querySelectorAll('#ordersFilters .status-filter-btn').forEach(btn => {
-        if (selectedStatuses.includes(btn.dataset.status)) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
-      
+      const i = selectedStatuses.indexOf(status);
+      if (i > -1) selectedStatuses.splice(i, 1); else selectedStatuses.push(status);
+      document.querySelectorAll('#ordersFilters .status-filter-btn').forEach(btn => btn.classList.toggle('active', selectedStatuses.includes(btn.dataset.status)));
       renderMyOrders();
     }
     
-    // ====================
-    // WAYBILL PDF
-    // ====================
     function downloadWaybill(orderId) {
       const order = myOrders.find(o => o.orderId === orderId);
       if (!order) return;
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2,'0'), month = String(now.getMonth()+1).padStart(2,'0'), year = now.getFullYear();
+      const docNum = order.orderId.replace('ORD','');
+      let rowNum = 1;
+      const itemsHtml = order.items.map(i => `<tr><td class="rn">${String(rowNum++).padStart(2,'0')}</td><td class="qty">${i.qty}</td><td class="desc">${escapeHtml(i.name)}</td></tr>`).join('');
+      let emptyRows = ''; for (let i = rowNum; i <= 10; i++) emptyRows += `<tr><td class="rn">${String(i).padStart(2,'0')}</td><td class="qty"></td><td class="desc"></td></tr>`;
       
-      const date = new Date(order.timestamp).toLocaleDateString('he-IL');
-      const itemsHtml = order.items.map(i => `
-        <tr>
-          <td style="border:1px solid #ccc;padding:8px;">${escapeHtml(i.name)}</td>
-          <td style="border:1px solid #ccc;padding:8px;text-align:center;">${i.qty}</td>
-        </tr>
-      `).join('');
-      
-      const html = `
-        <!DOCTYPE html>
-        <html dir="rtl">
-        <head>
-          <meta charset="UTF-8">
-          <title>תעודת משלוח - ${order.orderId}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 40px; direction: rtl; }
-            h1 { text-align: center; margin-bottom: 30px; }
-            .info { margin-bottom: 30px; }
-            .info-row { margin-bottom: 10px; }
-            .label { font-weight: bold; display: inline-block; width: 100px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { background: #f5f5f5; border: 1px solid #ccc; padding: 10px; text-align: right; }
-            .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; }
-          </style>
-        </head>
-        <body>
-          <h1>תעודת משלוח</h1>
-          
-          <div class="info">
-            <div class="info-row"><span class="label">מס׳ הזמנה:</span> ${order.orderId}</div>
-            <div class="info-row"><span class="label">תאריך:</span> ${date}</div>
-          </div>
-          
-          <div class="info">
-            <div class="info-row"><span class="label">מאת:</span> אורי ניב קרטונים</div>
-          </div>
-          
-          <div class="info">
-            <div class="info-row"><span class="label">אל:</span> ${escapeHtml(customer.customerName)}</div>
-          </div>
-          
-          <table>
-            <thead>
-              <tr>
-                <th>פריט</th>
-                <th style="width:100px;text-align:center;">כמות</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-            </tbody>
-          </table>
-          
-          <div class="footer">
-            נוצר בתאריך ${new Date().toLocaleString('he-IL')}
-          </div>
-        </body>
-        </html>
-      `;
-      
-      // Open in new window for printing/saving as PDF
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.focus();
-      
-      // Auto-trigger print dialog
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
+      const html = `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>תעודת משלוח</title>
+<style>@page{size:A4;margin:10mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;direction:rtl;padding:15px;font-size:11px}
+.hdr{display:flex;justify-content:space-between;margin-bottom:10px}.co{text-align:right}.co-name{font-size:20px;font-weight:bold}.co-det{font-size:10px;margin-top:5px;line-height:1.6}.logo{width:70px;height:70px;border:2px solid #000;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.title-row{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.doc-title{font-size:24px;font-weight:bold;border:2px solid #000;padding:5px 30px}.doc-num{border:2px solid #000;padding:5px 15px;font-size:16px;font-weight:bold}
+.date-row{display:flex;justify-content:flex-end;margin-bottom:10px}.date-box{display:flex;border:1px solid #000}.date-box span{padding:5px 12px;border-left:1px solid #000;text-align:center}.date-box span:last-child{border:none}.date-lbl{background:#f0f0f0;font-weight:bold}
+.info-row{display:flex;margin-bottom:8px}.info-lbl{font-weight:bold;min-width:80px}.info-val{flex:1;border-bottom:1px solid #000;padding:3px}
+table{width:100%;border-collapse:collapse;margin-top:15px}th{background:#f0f0f0;border:1px solid #000;padding:8px;font-size:10px}td{border:1px solid #000;padding:5px;height:24px;text-align:center}td.desc{text-align:right;padding-right:10px}td.rn{width:35px;background:#fafafa}td.qty{width:50px}
+.footer{margin-top:20px}.sig-row{display:flex;justify-content:space-between}.sig-box{width:45%}.sig-lbl{font-size:9px;margin-bottom:5px}.sig-line{border:1px solid #000;height:50px}</style></head>
+<body>
+<div class="hdr"><div class="co"><div class="co-name">${COMPANY.name}</div><div class="co-det">עוסק מורשה: ${COMPANY.id}<br>טלפון: ${COMPANY.phone}<br>כתובת: ${COMPANY.address}</div></div><div class="logo">${COMPANY.name.split(' ')[0]}</div></div>
+<div class="title-row"><div class="doc-title">תעודת משלוח</div><div class="doc-num">${docNum}</div></div>
+<div class="date-row"><div class="date-box"><span>${day}</span><span>${month}</span><span>${year}</span><span class="date-lbl">תאריך</span></div></div>
+<div class="info-row"><span class="info-lbl">שם הלקוח:</span><span class="info-val">${escapeHtml(customer.customerName)}</span></div>
+<div class="info-row"><span class="info-lbl">כתובת:</span><span class="info-val">${escapeHtml(customer.contactInfo||'')}</span></div>
+<table><thead><tr><th>מס׳</th><th>כמות</th><th>תאור הסחורה</th></tr></thead><tbody>${itemsHtml}${emptyRows}</tbody></table>
+<div class="footer"><div class="sig-row"><div class="sig-box"><div class="sig-lbl">חתימת הלקוח - הנני מאשר קבלת הסחורה:</div><div class="sig-line"></div></div><div class="sig-box"><div class="sig-lbl">חתימת המוביל:</div><div class="sig-line"></div></div></div></div>
+</body></html>`;
+      const w = window.open('','_blank'); w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 500);
     }
     
-    // ====================
-    // CART LOGIC
-    // ====================
     function handleQtyChange(e) {
-      const btn = e.target;
-      const productId = btn.dataset.id;
-      const action = btn.dataset.action;
-      
-      if (!cart[productId]) cart[productId] = 0;
-      
-      if (action === 'increase') {
-        cart[productId]++;
-      } else if (action === 'decrease' && cart[productId] > 0) {
-        cart[productId]--;
-      }
-      
-      // Update display
-      document.getElementById(`qty-${productId}`).textContent = cart[productId];
-      
-      // Update decrease button state
-      const decreaseBtn = document.querySelector(`.qty-btn[data-action="decrease"][data-id="${productId}"]`);
-      decreaseBtn.disabled = cart[productId] === 0;
-      
+      const btn = e.target, id = btn.dataset.id, action = btn.dataset.action;
+      if (!cart[id]) cart[id] = 0;
+      if (action === 'increase') cart[id]++; else if (action === 'decrease' && cart[id] > 0) cart[id]--;
+      document.getElementById(`qty-${id}`).textContent = cart[id];
+      document.querySelector(`.qty-btn[data-action="decrease"][data-id="${id}"]`).disabled = cart[id] === 0;
       updateCartSummary();
     }
     
     function updateCartSummary() {
       if (currentTab !== 'order') return;
-      
-      const items = Object.entries(cart).filter(([_, qty]) => qty > 0);
-      const totalItems = items.reduce((sum, [_, qty]) => sum + qty, 0);
-      
-      document.getElementById('cartItemsCount').textContent = `${totalItems} פריטים`;
-      
-      const cartSummary = document.getElementById('cartSummary');
-      if (totalItems > 0) {
-        cartSummary.classList.add('visible');
-      } else {
-        cartSummary.classList.remove('visible');
-      }
+      const total = Object.values(cart).reduce((s,q) => s+q, 0);
+      document.getElementById('cartItemsCount').textContent = `${total} פריטים`;
+      document.getElementById('cartSummary').classList.toggle('visible', total > 0);
     }
     
-    // ====================
-    // CHECKOUT
-    // ====================
     function openCheckoutModal() {
-      const items = Object.entries(cart)
-        .filter(([_, qty]) => qty > 0)
-        .map(([id, qty]) => {
-          const product = products.find(p => p.id === id);
-          return { ...product, qty };
-        });
-      
-      document.getElementById('modalBody').innerHTML = `
-        <div class="order-items">
-          ${items.map(item => `
-            <div class="order-item">
-              <div>
-                <div class="order-item-name">${escapeHtml(item.name)}</div>
-              </div>
-              <div class="order-item-qty">x${item.qty}</div>
-            </div>
-          `).join('')}
-        </div>
-        <textarea class="notes-input" id="orderNotes" placeholder="הוסף הערות (אופציונלי)"></textarea>
-        <button class="submit-btn" id="submitOrder">שלח הזמנה</button>
-      `;
-      
+      const items = Object.entries(cart).filter(([_,q]) => q > 0).map(([id,qty]) => ({...products.find(p=>p.id===id), qty}));
+      document.getElementById('modalBody').innerHTML = `<div class="order-items">${items.map(i => `<div class="order-item"><div>${escapeHtml(i.name)}</div><div>x${i.qty}</div></div>`).join('')}</div><textarea class="notes-input" id="orderNotes" placeholder="הערות (אופציונלי)"></textarea><button class="submit-btn" id="submitOrder">שלח הזמנה</button>`;
       document.getElementById('submitOrder').addEventListener('click', submitOrder);
       document.getElementById('checkoutModal').classList.add('visible');
     }
     
-    function closeCheckoutModal() {
-      document.getElementById('checkoutModal').classList.remove('visible');
-    }
+    function closeCheckoutModal() { document.getElementById('checkoutModal').classList.remove('visible'); }
     
     async function submitOrder() {
-      const submitBtn = document.getElementById('submitOrder');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'שולח...';
-      
-      const items = Object.entries(cart)
-        .filter(([_, qty]) => qty > 0)
-        .map(([id, qty]) => {
-          const product = products.find(p => p.id === id);
-          return {
-            productId: id,
-            name: product.name,
-            qty: qty,
-            price: product.price
-          };
-        });
-      
-      const orderData = {
-        customerId: customer.customerId,
-        items: items,
-        notes: document.getElementById('orderNotes').value.trim()
-      };
-      
+      const btn = document.getElementById('submitOrder'); btn.disabled = true; btn.textContent = 'שולח...';
+      const items = Object.entries(cart).filter(([_,q])=>q>0).map(([id,qty])=>({productId:id,name:products.find(p=>p.id===id).name,qty}));
       try {
-        const res = await fetch(`${API_URL}?action=submitOrder&orderData=${encodeURIComponent(JSON.stringify(orderData))}`);
+        const res = await fetch(`${API_URL}?action=submitOrder&orderData=${encodeURIComponent(JSON.stringify({customerId:customer.customerId,items,notes:document.getElementById('orderNotes').value.trim()}))}`);
         const data = await res.json();
-        
-        if (data.success) {
-          showSuccess(data.data.orderId);
-        } else {
-          alert('שליחת ההזמנה נכשלה: ' + (data.error || 'שגיאה לא ידועה'));
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'שלח הזמנה';
-        }
-      } catch (error) {
-        console.error('Submit error:', error);
-        alert('שגיאת חיבור. אנא נסה שוב.');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'שלח הזמנה';
-      }
+        if (data.success) { closeCheckoutModal(); document.getElementById('cartSummary').classList.remove('visible'); document.getElementById('orderPanel').innerHTML = `<div class="success-screen"><div class="success-icon">✓</div><h2>ההזמנה נשלחה!</h2><p>מס׳ הזמנה: <strong>${data.data.orderId}</strong></p><button class="new-order-btn" onclick="location.reload()">הזמנה חדשה</button></div>`; }
+        else { alert('שגיאה: '+(data.error||'')); btn.disabled=false; btn.textContent='שלח הזמנה'; }
+      } catch(e) { alert('שגיאת חיבור'); btn.disabled=false; btn.textContent='שלח הזמנה'; }
     }
     
-    function showSuccess(orderId) {
-      closeCheckoutModal();
-      document.getElementById('cartSummary').classList.remove('visible');
-      
-      document.getElementById('orderPanel').innerHTML = `
-        <div class="success-screen">
-          <div class="success-icon">✓</div>
-          <h2>ההזמנה נשלחה!</h2>
-          <p>הזמנתך <strong>${orderId}</strong> התקבלה.<br>נטפל בה בהקדם.</p>
-          <button class="new-order-btn" onclick="location.reload()">הזמנה חדשה</button>
-        </div>
-      `;
-    }
-    
-    // ====================
-    // UTILS
-    // ====================
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-    
-    // ====================
-    // START
-    // ====================
+    function escapeHtml(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
     init();
   </script>
 </body>

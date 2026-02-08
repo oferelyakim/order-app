@@ -3,325 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ייצור - ניהול הזמנות</title>
+  <title>ייצור</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; min-height: 100vh; direction: rtl; }
-    .auth-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-    .auth-box { background: #fff; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 360px; text-align: center; }
-    .auth-box h1 { margin-bottom: 10px; color: #333; }
-    .auth-box p { color: #666; margin-bottom: 25px; font-size: 0.9rem; }
-    .auth-input { width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; margin-bottom: 15px; text-align: center; letter-spacing: 2px; }
-    .auth-input:focus { outline: none; border-color: #ff9800; }
-    .pin-wrapper { position: relative; margin-bottom: 15px; }
-    .pin-wrapper input { margin-bottom: 0; }
-    .toggle-pin { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #666; }
-    .auth-btn { width: 100%; padding: 14px; background: #ff9800; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-    .auth-btn:hover { background: #f57c00; }
-    .auth-error { color: #d32f2f; margin-top: 15px; font-size: 0.9rem; }
-    .app-container { display: none; }
-    .app-container.visible { display: block; }
-    .header { background: #ff9800; color: #fff; padding: 15px 20px; position: sticky; top: 0; z-index: 50; }
-    .header-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-    .header h1 { font-size: 1.3rem; }
-    .logout-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
-    .content { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-start; }
-    .filter-select { padding: 10px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.9rem; background: #fff; min-width: 150px; }
-    .status-filters { display: flex; gap: 8px; flex-wrap: wrap; }
-    .status-filter-btn { padding: 8px 14px; border: 2px solid #e0e0e0; border-radius: 20px; background: #fff; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-    .status-filter-btn:hover { border-color: #bdbdbd; }
-    .status-filter-btn.active { border-color: #ff9800; background: #fff3e0; color: #e65100; }
-    .status-filter-btn.pending.active { border-color: #e65100; background: #fff3e0; color: #e65100; }
-    .status-filter-btn.processing.active { border-color: #1565c0; background: #e3f2fd; color: #1565c0; }
-    .status-filter-btn.ready.active { border-color: #7b1fa2; background: #f3e5f5; color: #7b1fa2; }
-    .status-filter-btn.delivered.active { border-color: #2e7d32; background: #e8f5e9; color: #2e7d32; }
-    .status-filter-btn.cancelled.active { border-color: #c62828; background: #ffebee; color: #c62828; }
-    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; overflow: hidden; }
-    .card-body { padding: 15px 20px; }
-    .status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
-    .status.pending { background: #fff3e0; color: #e65100; }
-    .status.processing { background: #e3f2fd; color: #1565c0; }
-    .status.ready { background: #f3e5f5; color: #7b1fa2; }
-    .status.delivered { background: #e8f5e9; color: #2e7d32; }
-    .status.cancelled { background: #ffebee; color: #c62828; }
-    .order-card { cursor: pointer; transition: box-shadow 0.2s; }
-    .order-card:hover { box-shadow: 0 4px 15px rgba(0,0,0,0.12); }
-    .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-    .order-id { font-weight: 600; color: #ff9800; }
-    .order-customer { color: #333; font-weight: 500; margin-bottom: 5px; }
-    .order-date { color: #999; font-size: 0.85rem; }
-    .order-items-preview { color: #666; font-size: 0.9rem; margin: 10px 0; }
-    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer; font-weight: 500; }
-    .btn-primary { background: #ff9800; color: #fff; }
-    .btn-primary:hover { background: #f57c00; }
-    .btn-secondary { background: #e0e0e0; color: #333; }
-    .btn-secondary:hover { background: #bdbdbd; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
-    .modal-overlay.visible { display: flex; }
-    .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-    .modal-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-    .modal-header h2 { font-size: 1.2rem; }
-    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
-    .modal-body { padding: 20px; }
-    .modal-footer { padding: 15px 20px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-start; gap: 10px; }
-    .form-group { margin-bottom: 18px; }
-    .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: #333; font-size: 0.9rem; }
-    .status-select { padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; width: 100%; margin-top: 10px; }
-    .order-detail-items { margin: 15px 0; }
-    .order-detail-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
-    .order-notes { background: #f5f5f5; padding: 12px; border-radius: 8px; margin: 15px 0; font-style: italic; color: #666; }
-    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
-    .empty-state .icon { font-size: 3rem; margin-bottom: 15px; }
-    .loading { text-align: center; padding: 40px; color: #666; }
-    .spinner { width: 30px; height: 30px; border: 3px solid #e0e0e0; border-top-color: #ff9800; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @media (max-width: 600px) { .header h1 { font-size: 1.1rem; } .content { padding: 15px; } }
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;min-height:100vh;direction:rtl}
+    .auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}.auth-box{background:#fff;padding:40px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.1);width:100%;max-width:360px;text-align:center}.auth-box h1{margin-bottom:10px}.auth-box p{color:#666;margin-bottom:25px}.auth-input{width:100%;padding:14px;border:2px solid #e0e0e0;border-radius:10px;font-size:1rem;margin-bottom:15px;text-align:center;letter-spacing:2px}.auth-input:focus{outline:none;border-color:#ff9800}.pin-wrapper{position:relative;margin-bottom:15px}.pin-wrapper input{margin-bottom:0}.toggle-pin{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.2rem}.auth-btn{width:100%;padding:14px;background:#ff9800;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer}.auth-error{color:#d32f2f;margin-top:15px;display:none}
+    .app-container{display:none}.app-container.visible{display:block}.header{background:#ff9800;color:#fff;padding:15px 20px;position:sticky;top:0;z-index:50}.header-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}.header h1{font-size:1.3rem}.logout-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer}
+    .content{max-width:1200px;margin:0 auto;padding:20px}
+    .card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:15px;overflow:hidden}.card-body{padding:15px 20px}
+    .status{display:inline-block;padding:4px 10px;border-radius:20px;font-size:0.8rem;font-weight:500}.status.pending{background:#fff3e0;color:#e65100}.status.processing{background:#e3f2fd;color:#1565c0}.status.ready{background:#f3e5f5;color:#7b1fa2}.status.delivered{background:#e8f5e9;color:#2e7d32}.status.cancelled{background:#ffebee;color:#c62828}
+    .order-card{cursor:pointer;transition:box-shadow 0.2s}.order-card:hover{box-shadow:0 4px 15px rgba(0,0,0,0.12)}.order-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}.order-id{font-weight:600;color:#ff9800}.order-customer{color:#333;font-weight:500;margin-bottom:5px}.order-date{color:#999;font-size:0.85rem}.order-items-preview{color:#666;font-size:0.9rem;margin:10px 0}
+    .filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}.filter-select{padding:10px 15px;border:1px solid #e0e0e0;border-radius:8px;background:#fff;min-width:150px}.status-filters{display:flex;gap:8px;flex-wrap:wrap}.status-filter-btn{padding:8px 14px;border:2px solid #e0e0e0;border-radius:20px;background:#fff;font-size:0.85rem;cursor:pointer}.status-filter-btn.active{border-color:#ff9800;background:#fff3e0;color:#e65100}.status-filter-btn.pending.active{border-color:#e65100;background:#fff3e0;color:#e65100}.status-filter-btn.processing.active{border-color:#1565c0;background:#e3f2fd;color:#1565c0}.status-filter-btn.ready.active{border-color:#7b1fa2;background:#f3e5f5;color:#7b1fa2}.status-filter-btn.delivered.active{border-color:#2e7d32;background:#e8f5e9;color:#2e7d32}.status-filter-btn.cancelled.active{border-color:#c62828;background:#ffebee;color:#c62828}
+    .btn{padding:8px 16px;border:none;border-radius:6px;font-size:0.9rem;cursor:pointer;font-weight:500}.btn-primary{background:#ff9800;color:#fff}.btn-secondary{background:#e0e0e0;color:#333}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}.modal-overlay.visible{display:flex}.modal{background:#fff;border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}.modal-header{padding:20px;border-bottom:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center}.modal-header h2{font-size:1.2rem}.modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:#666}.modal-body{padding:20px}.modal-footer{padding:15px 20px;border-top:1px solid #e0e0e0;display:flex;justify-content:flex-start;gap:10px}
+    .form-group{margin-bottom:18px}.form-group label{display:block;margin-bottom:6px;font-weight:500;font-size:0.9rem}
+    .order-detail-items{margin:15px 0}.order-detail-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0}.order-notes{background:#f5f5f5;padding:12px;border-radius:8px;margin:15px 0;font-style:italic;color:#666}.status-select{padding:10px 15px;border:2px solid #e0e0e0;border-radius:8px;font-size:1rem;width:100%;margin-top:10px}
+    .empty-state{text-align:center;padding:60px 20px;color:#999}.loading{text-align:center;padding:40px;color:#666}.spinner{width:30px;height:30px;border:3px solid #e0e0e0;border-top-color:#ff9800;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 15px}@keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
   <div class="auth-screen" id="authScreen">
-    <div class="auth-box">
-      <h1>📦 ייצור</h1>
-      <p>הכנס את הקוד שלך לגישה לניהול הזמנות</p>
-      <div class="pin-wrapper">
-        <input type="password" class="auth-input" id="pinInput" placeholder="••••••" maxlength="20">
-        <button type="button" class="toggle-pin" id="togglePin">👁️</button>
-      </div>
-      <button class="auth-btn" id="loginBtn">כניסה</button>
-      <p class="auth-error" id="authError" style="display:none"></p>
-    </div>
+    <div class="auth-box"><h1>🏭 ייצור</h1><p>הכנס קוד גישה</p><div class="pin-wrapper"><input type="password" class="auth-input" id="pinInput" placeholder="••••••" maxlength="20"><button type="button" class="toggle-pin" id="togglePin">👁️</button></div><button class="auth-btn" id="loginBtn">כניסה</button><p class="auth-error" id="authError"></p></div>
   </div>
-  
   <div class="app-container" id="appContainer">
-    <header class="header">
-      <div class="header-inner">
-        <h1>🏭 ייצור - הזמנות</h1>
-        <button class="logout-btn" id="logoutBtn">יציאה</button>
-      </div>
-    </header>
-    
+    <header class="header"><div class="header-inner"><h1>🏭 ייצור - הזמנות</h1><button class="logout-btn" id="logoutBtn">יציאה</button></div></header>
     <main class="content">
-      <div class="filters">
-        <div class="status-filters" id="statusFilters">
-          <button class="status-filter-btn pending active" data-status="pending">ממתין</button>
-          <button class="status-filter-btn processing active" data-status="processing">בטיפול</button>
-          <button class="status-filter-btn ready active" data-status="ready">מוכן למשלוח</button>
-          <button class="status-filter-btn delivered" data-status="delivered">נמסר</button>
-          <button class="status-filter-btn cancelled" data-status="cancelled">בוטל</button>
-        </div>
-        <select class="filter-select" id="customerFilter">
-          <option value="">כל הלקוחות</option>
-        </select>
-      </div>
+      <div class="filters"><div class="status-filters" id="statusFilters"><button class="status-filter-btn pending active" data-status="pending">ממתין</button><button class="status-filter-btn processing active" data-status="processing">בטיפול</button><button class="status-filter-btn ready active" data-status="ready">מוכן למשלוח</button><button class="status-filter-btn delivered" data-status="delivered">נמסר</button><button class="status-filter-btn cancelled" data-status="cancelled">בוטל</button></div><select class="filter-select" id="customerFilter"><option value="">כל הלקוחות</option></select></div>
       <div id="ordersList"></div>
     </main>
   </div>
-  
-  <div class="modal-overlay" id="modal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 id="modalTitle">פרטי הזמנה</h2>
-        <button class="modal-close" id="modalClose">&times;</button>
-      </div>
-      <div class="modal-body" id="modalBody"></div>
-      <div class="modal-footer" id="modalFooter"></div>
-    </div>
-  </div>
-  
-  <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbz1twL3kPkXawFM-AqDqswcgEI2sd32HGylQeYgmpQAat-Hwu9LaZ1ukMHUirCpEm3o0A/exec';
-    let token = localStorage.getItem('mfgToken') || '';
-    let orders = [];
-    let customers = [];
-    let selectedStatuses = ['pending', 'processing', 'ready'];
-    
-    function checkAuth() { if (token) { showApp(); loadData(); } }
-    function login() {
-      const pin = document.getElementById('pinInput').value.trim();
-      if (!pin) { showAuthError('אנא הכנס קוד'); return; }
-      token = pin;
-      localStorage.setItem('mfgToken', token);
-      showApp();
-      loadData();
-    }
-    function logout() {
-      token = '';
-      localStorage.removeItem('mfgToken');
-      document.getElementById('authScreen').style.display = 'flex';
-      document.getElementById('appContainer').classList.remove('visible');
-      document.getElementById('pinInput').value = '';
-    }
-    function showApp() {
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('appContainer').classList.add('visible');
-    }
-    function showAuthError(msg) {
-      const el = document.getElementById('authError');
-      el.textContent = msg;
-      el.style.display = 'block';
-    }
-    
-    async function api(action, params = {}) {
-      const url = new URL(API_URL);
-      url.searchParams.set('action', action);
-      url.searchParams.set('token', token);
-      Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.set(key, typeof value === 'object' ? JSON.stringify(value) : value);
-      });
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.error === 'Unauthorized') { showAuthError('קוד שגוי'); logout(); return null; }
-        return data;
-      } catch (error) {
-        console.error('API Error:', error);
-        return { success: false, error: error.message };
-      }
-    }
-    
-    async function loadData() {
-      document.getElementById('ordersList').innerHTML = '<div class="loading"><div class="spinner"></div><p>טוען הזמנות...</p></div>';
-      const [ordersRes, customersRes] = await Promise.all([api('getOrders'), api('getCustomers')]);
-      if (ordersRes?.success) orders = ordersRes.data;
-      if (customersRes?.success) customers = customersRes.data;
-      renderOrders();
-      populateCustomerFilter();
-    }
-    
-    function populateCustomerFilter() {
-      const select = document.getElementById('customerFilter');
-      select.innerHTML = '<option value="">כל הלקוחות</option>' + customers.map(c => `<option value="${c.customerId}">${escapeHtml(c.customerName)}</option>`).join('');
-    }
-    
-    function renderOrders() {
-      const customerFilter = document.getElementById('customerFilter').value;
-      let filtered = orders;
-      if (selectedStatuses.length > 0) filtered = filtered.filter(o => selectedStatuses.includes(o.status));
-      if (customerFilter) filtered = filtered.filter(o => o.customerId === customerFilter);
-      if (filtered.length === 0) {
-        document.getElementById('ordersList').innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>לא נמצאו הזמנות</p></div>';
-        return;
-      }
-      document.getElementById('ordersList').innerHTML = filtered.map(order => {
-        const itemsPreview = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
-        const date = new Date(order.timestamp).toLocaleString('he-IL');
-        return `
-          <div class="card order-card" onclick="showOrderDetail('${order.orderId}')">
-            <div class="card-body">
-              <div class="order-header">
-                <div>
-                  <div class="order-id">${order.orderId}</div>
-                  <div class="order-customer">${escapeHtml(order.customerName)}</div>
-                  <div class="order-date">${date}</div>
-                </div>
-                <span class="status ${order.status}">${formatStatus(order.status)}</span>
-              </div>
-              <div class="order-items-preview">${escapeHtml(itemsPreview)}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-    
-    function formatStatus(status) {
-      const labels = { pending: 'ממתין', processing: 'בטיפול', ready: 'מוכן למשלוח', delivered: 'נמסר', cancelled: 'בוטל' };
-      return labels[status] || status;
-    }
-    
-    function toggleStatusFilter(status) {
-      const index = selectedStatuses.indexOf(status);
-      if (index > -1) selectedStatuses.splice(index, 1);
-      else selectedStatuses.push(status);
-      document.querySelectorAll('.status-filter-btn').forEach(btn => {
-        if (selectedStatuses.includes(btn.dataset.status)) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
-      renderOrders();
-    }
-    
-    function showOrderDetail(orderId) {
-      const order = orders.find(o => o.orderId === orderId);
-      if (!order) return;
-      const date = new Date(order.timestamp).toLocaleString('he-IL');
-      const showWaybill = order.status === 'ready' || order.status === 'delivered';
-      openModal('פרטי הזמנה', `
-        <div><strong>מס׳ הזמנה:</strong> ${order.orderId}<br><strong>לקוח:</strong> ${escapeHtml(order.customerName)}<br><strong>תאריך:</strong> ${date}</div>
-        <div class="order-detail-items">
-          ${order.items.map(item => `<div class="order-detail-item"><div><strong>${escapeHtml(item.name)}</strong></div><div>x${item.qty}</div></div>`).join('')}
-        </div>
-        ${order.notes ? `<div class="order-notes">"${escapeHtml(order.notes)}"</div>` : ''}
-        ${showWaybill ? `<button class="btn btn-secondary" onclick="downloadWaybill('${order.orderId}')" style="margin-bottom:15px;width:100%;">📄 הורד תעודת משלוח</button>` : ''}
-        <div class="form-group">
-          <label>עדכון סטטוס</label>
-          <select class="status-select" id="orderStatusSelect" data-old-status="${order.status}">
-            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>ממתין</option>
-            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>בטיפול</option>
-            <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>מוכן למשלוח</option>
-            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>נמסר</option>
-            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>בוטל</option>
-          </select>
-        </div>
-      `, `
-        <button class="btn btn-secondary" onclick="closeModal()">סגור</button>
-        <button class="btn btn-primary" onclick="updateOrderStatus('${orderId}')">שמור</button>
-      `);
-    }
-    
-    function downloadWaybill(orderId) {
-      const order = orders.find(o => o.orderId === orderId);
-      if (!order) return;
-      const date = new Date(order.timestamp).toLocaleDateString('he-IL');
-      const itemsHtml = order.items.map(i => `<tr><td style="border:1px solid #ccc;padding:8px;">${escapeHtml(i.name)}</td><td style="border:1px solid #ccc;padding:8px;text-align:center;">${i.qty}</td></tr>`).join('');
-      const html = `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>תעודת משלוח - ${order.orderId}</title><style>body{font-family:Arial,sans-serif;padding:40px;direction:rtl}h1{text-align:center;margin-bottom:30px}.info{margin-bottom:30px}.info-row{margin-bottom:10px}.label{font-weight:bold;display:inline-block;width:100px}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#f5f5f5;border:1px solid #ccc;padding:10px;text-align:right}.footer{margin-top:50px;text-align:center;color:#666;font-size:12px}</style></head><body><h1>תעודת משלוח</h1><div class="info"><div class="info-row"><span class="label">מס׳ הזמנה:</span> ${order.orderId}</div><div class="info-row"><span class="label">תאריך:</span> ${date}</div></div><div class="info"><div class="info-row"><span class="label">מאת:</span> אורי ניב קרטונים</div></div><div class="info"><div class="info-row"><span class="label">אל:</span> ${escapeHtml(order.customerName)}</div></div><table><thead><tr><th>פריט</th><th style="width:100px;text-align:center;">כמות</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="footer">נוצר בתאריך ${new Date().toLocaleString('he-IL')}</div></body></html>`;
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => { printWindow.print(); }, 500);
-    }
-    
-    async function updateOrderStatus(orderId) {
-      const selectEl = document.getElementById('orderStatusSelect');
-      const newStatus = selectEl.value;
-      const oldStatus = selectEl.dataset.oldStatus;
-      let updateInventory = false;
-      if (newStatus === 'ready' && oldStatus !== 'ready' && oldStatus !== 'delivered') {
-        updateInventory = confirm('לעדכן מלאי? פעולה זו תקזז את כמויות ההזמנה מהמלאי.');
-      } else if (oldStatus === 'ready' && (newStatus === 'pending' || newStatus === 'processing' || newStatus === 'cancelled')) {
-        updateInventory = confirm('לעדכן מלאי? פעולה זו תחזיר את כמויות ההזמנה למלאי.');
-      }
-      const res = await api('updateOrderStatus', { orderId, status: newStatus, updateInventory });
-      if (res?.success) { closeModal(); await loadData(); }
-      else { alert('עדכון ההזמנה נכשל: ' + (res?.error || 'שגיאה לא ידועה')); }
-    }
-    
-    function openModal(title, bodyHtml, footerHtml = '') {
-      document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalBody').innerHTML = bodyHtml;
-      document.getElementById('modalFooter').innerHTML = footerHtml;
-      document.getElementById('modal').classList.add('visible');
-    }
-    function closeModal() { document.getElementById('modal').classList.remove('visible'); }
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-    
-    document.getElementById('loginBtn').addEventListener('click', login);
-    document.getElementById('pinInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') login(); });
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-    document.getElementById('togglePin').addEventListener('click', () => {
-      const input = document.getElementById('pinInput');
-      const btn = document.getElementById('togglePin');
-      if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
-      else { input.type = 'password'; btn.textContent = '👁️'; }
-    });
-    document.querySelectorAll('.status-filter-btn').forEach(btn => { btn.addEventListener('click', () => toggleStatusFilter(btn.dataset.status)); });
-    document.getElementById('customerFilter').addEventListener('change', renderOrders);
-    document.getElementById('modalClose').addEventListener('click', closeModal);
-    document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
-    checkAuth();
-  </script>
+  <div class="modal-overlay" id="modal"><div class="modal"><div class="modal-header"><h2 id="modalTitle"></h2><button class="modal-close" id="modalClose">&times;</button></div><div class="modal-body" id="modalBody"></div><div class="modal-footer" id="modalFooter"></div></div></div>
+
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbz1twL3kPkXawFM-AqDqswcgEI2sd32HGylQeYgmpQAat-Hwu9LaZ1ukMHUirCpEm3o0A/exec';
+const COMPANY={name:'אורי ניב קרטונים',id:'___________',phone:'___________',address:'___________'};
+
+let token=localStorage.getItem('mfgToken')||'',orders=[],customers=[],selectedStatuses=['pending','processing','ready'];
+
+function checkAuth(){if(token){showApp();loadData();}}
+function login(){const pin=document.getElementById('pinInput').value.trim();if(!pin){showAuthError('אנא הכנס קוד');return;}token=pin;localStorage.setItem('mfgToken',token);showApp();loadData();}
+function logout(){token='';localStorage.removeItem('mfgToken');document.getElementById('authScreen').style.display='flex';document.getElementById('appContainer').classList.remove('visible');document.getElementById('pinInput').value='';}
+function showApp(){document.getElementById('authScreen').style.display='none';document.getElementById('appContainer').classList.add('visible');}
+function showAuthError(msg){const el=document.getElementById('authError');el.textContent=msg;el.style.display='block';}
+
+async function api(action,params={}){const url=new URL(API_URL);url.searchParams.set('action',action);url.searchParams.set('token',token);Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,typeof v==='object'?JSON.stringify(v):v));try{const res=await fetch(url);const data=await res.json();if(data.error==='Unauthorized'){showAuthError('קוד שגוי');logout();return null;}return data;}catch(e){return{success:false,error:e.message};}}
+
+async function loadData(){document.getElementById('ordersList').innerHTML='<div class="loading"><div class="spinner"></div><p>טוען...</p></div>';const[o,c]=await Promise.all([api('getOrders'),api('getCustomers')]);if(o?.success)orders=o.data;if(c?.success)customers=c.data;renderOrders();populateCustomerFilter();}
+
+function populateCustomerFilter(){document.getElementById('customerFilter').innerHTML='<option value="">כל הלקוחות</option>'+customers.map(c=>`<option value="${c.customerId}">${esc(c.customerName)}</option>`).join('');}
+function formatStatus(s){return{pending:'ממתין',processing:'בטיפול',ready:'מוכן למשלוח',delivered:'נמסר',cancelled:'בוטל'}[s]||s;}
+
+function renderOrders(){const cf=document.getElementById('customerFilter').value;let f=orders;if(selectedStatuses.length>0)f=f.filter(o=>selectedStatuses.includes(o.status));if(cf)f=f.filter(o=>o.customerId===cf);if(f.length===0){document.getElementById('ordersList').innerHTML='<div class="empty-state">📋<br>לא נמצאו הזמנות</div>';return;}document.getElementById('ordersList').innerHTML=f.map(o=>{const items=o.items.map(i=>`${i.qty}x ${i.name}`).join(', ');const date=new Date(o.timestamp).toLocaleString('he-IL');return`<div class="card order-card" onclick="showOrderDetail('${o.orderId}')"><div class="card-body"><div class="order-header"><div><div class="order-id">${o.orderId}</div><div class="order-customer">${esc(o.customerName)}</div><div class="order-date">${date}</div></div><span class="status ${o.status}">${formatStatus(o.status)}</span></div><div class="order-items-preview">${esc(items)}</div></div></div>`;}).join('');}
+
+function toggleStatusFilter(status){const i=selectedStatuses.indexOf(status);if(i>-1)selectedStatuses.splice(i,1);else selectedStatuses.push(status);document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.toggle('active',selectedStatuses.includes(b.dataset.status)));renderOrders();}
+
+function showOrderDetail(orderId){const order=orders.find(o=>o.orderId===orderId);if(!order)return;const date=new Date(order.timestamp).toLocaleString('he-IL');const showWaybill=order.status==='ready'||order.status==='delivered';openModal('פרטי הזמנה',`<div><strong>מס׳:</strong> ${order.orderId}<br><strong>לקוח:</strong> ${esc(order.customerName)}<br><strong>תאריך:</strong> ${date}</div><div class="order-detail-items">${order.items.map(i=>`<div class="order-detail-item"><div><strong>${esc(i.name)}</strong><br><small>x${i.qty}</small></div></div>`).join('')}</div>${order.notes?`<div class="order-notes">"${esc(order.notes)}"</div>`:''}${showWaybill?`<button class="btn btn-secondary" onclick="downloadWaybill('${order.orderId}')" style="width:100%;margin-bottom:15px">📄 תעודת משלוח</button>`:''}<div class="form-group"><label>סטטוס</label><select class="status-select" id="orderStatusSelect" data-old-status="${order.status}"><option value="pending" ${order.status==='pending'?'selected':''}>ממתין</option><option value="processing" ${order.status==='processing'?'selected':''}>בטיפול</option><option value="ready" ${order.status==='ready'?'selected':''}>מוכן למשלוח</option><option value="delivered" ${order.status==='delivered'?'selected':''}>נמסר</option><option value="cancelled" ${order.status==='cancelled'?'selected':''}>בוטל</option></select></div>`,`<button class="btn btn-secondary" onclick="closeModal()">סגור</button><button class="btn btn-primary" onclick="updateOrderStatus('${orderId}')">שמור</button>`);}
+
+function downloadWaybill(orderId){const order=orders.find(o=>o.orderId===orderId);if(!order)return;const cust=customers.find(c=>c.customerId===order.customerId);const now=new Date();const day=String(now.getDate()).padStart(2,'0'),month=String(now.getMonth()+1).padStart(2,'0'),year=now.getFullYear();const docNum=order.orderId.replace('ORD','');let rn=1;const itemsHtml=order.items.map(i=>`<tr><td class="rn">${String(rn++).padStart(2,'0')}</td><td class="qty">${i.qty}</td><td class="desc">${esc(i.name)}</td></tr>`).join('');let empty='';for(let i=rn;i<=10;i++)empty+=`<tr><td class="rn">${String(i).padStart(2,'0')}</td><td class="qty"></td><td class="desc"></td></tr>`;const html=`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>תעודת משלוח</title><style>@page{size:A4;margin:10mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;direction:rtl;padding:15px;font-size:11px}.hdr{display:flex;justify-content:space-between;margin-bottom:10px}.co{text-align:right}.co-name{font-size:20px;font-weight:bold}.co-det{font-size:10px;margin-top:5px;line-height:1.6}.logo{width:70px;height:70px;border:2px solid #000;display:flex;align-items:center;justify-content:center;font-weight:bold}.title-row{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.doc-title{font-size:24px;font-weight:bold;border:2px solid #000;padding:5px 30px}.doc-num{border:2px solid #000;padding:5px 15px;font-size:16px;font-weight:bold}.date-row{display:flex;justify-content:flex-end;margin-bottom:10px}.date-box{display:flex;border:1px solid #000}.date-box span{padding:5px 12px;border-left:1px solid #000;text-align:center}.date-box span:last-child{border:none}.date-lbl{background:#f0f0f0;font-weight:bold}.info-row{display:flex;margin-bottom:8px}.info-lbl{font-weight:bold;min-width:80px}.info-val{flex:1;border-bottom:1px solid #000;padding:3px}table{width:100%;border-collapse:collapse;margin-top:15px}th{background:#f0f0f0;border:1px solid #000;padding:8px;font-size:10px}td{border:1px solid #000;padding:5px;height:24px;text-align:center}td.desc{text-align:right;padding-right:10px}td.rn{width:35px;background:#fafafa}td.qty{width:50px}.footer{margin-top:20px}.sig-row{display:flex;justify-content:space-between}.sig-box{width:45%}.sig-lbl{font-size:9px;margin-bottom:5px}.sig-line{border:1px solid #000;height:50px}</style></head><body><div class="hdr"><div class="co"><div class="co-name">${COMPANY.name}</div><div class="co-det">עוסק מורשה: ${COMPANY.id}<br>טלפון: ${COMPANY.phone}<br>כתובת: ${COMPANY.address}</div></div><div class="logo">${COMPANY.name.split(' ')[0]}</div></div><div class="title-row"><div class="doc-title">תעודת משלוח</div><div class="doc-num">${docNum}</div></div><div class="date-row"><div class="date-box"><span>${day}</span><span>${month}</span><span>${year}</span><span class="date-lbl">תאריך</span></div></div><div class="info-row"><span class="info-lbl">שם הלקוח:</span><span class="info-val">${esc(order.customerName)}</span></div><div class="info-row"><span class="info-lbl">כתובת:</span><span class="info-val">${cust?esc(cust.contactInfo||''):''}</span></div><table><thead><tr><th>מס׳</th><th>כמות</th><th>תאור הסחורה</th></tr></thead><tbody>${itemsHtml}${empty}</tbody></table><div class="footer"><div class="sig-row"><div class="sig-box"><div class="sig-lbl">חתימת הלקוח - הנני מאשר קבלת הסחורה:</div><div class="sig-line"></div></div><div class="sig-box"><div class="sig-lbl">חתימת המוביל:</div><div class="sig-line"></div></div></div></div></body></html>`;const w=window.open('','_blank');w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),500);}
+
+async function updateOrderStatus(orderId){const sel=document.getElementById('orderStatusSelect');const newStatus=sel.value,oldStatus=sel.dataset.oldStatus;let updateInventory=false;if(newStatus==='ready'&&oldStatus!=='ready'&&oldStatus!=='delivered'){updateInventory=confirm('לעדכן מלאי? הכמויות יקוזזו מהמלאי.');}else if(oldStatus==='ready'&&(newStatus==='pending'||newStatus==='processing'||newStatus==='cancelled')){updateInventory=confirm('לעדכן מלאי? הכמויות יוחזרו למלאי.');}const res=await api('updateOrderStatus',{orderId,status:newStatus,updateInventory});if(res?.success){closeModal();await loadData();}else{alert('שגיאה: '+(res?.error||''));}}
+
+function openModal(title,body,footer=''){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modalFooter').innerHTML=footer;document.getElementById('modal').classList.add('visible');}
+function closeModal(){document.getElementById('modal').classList.remove('visible');}
+
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'):'';}
+
+document.getElementById('loginBtn').addEventListener('click',login);
+document.getElementById('pinInput').addEventListener('keypress',e=>{if(e.key==='Enter')login();});
+document.getElementById('logoutBtn').addEventListener('click',logout);
+document.getElementById('togglePin').addEventListener('click',()=>{const i=document.getElementById('pinInput'),b=document.getElementById('togglePin');if(i.type==='password'){i.type='text';b.textContent='🙈';}else{i.type='password';b.textContent='👁️';}});
+document.querySelectorAll('.status-filter-btn').forEach(b=>b.addEventListener('click',()=>toggleStatusFilter(b.dataset.status)));
+document.getElementById('customerFilter').addEventListener('change',renderOrders);
+document.getElementById('modalClose').addEventListener('click',closeModal);
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+
+checkAuth();
+</script>
 </body>
 </html>
